@@ -1,4 +1,4 @@
-,municipio,Código Município IBGE,População estimada (2020),UF1,data,indice_isolamento
+,municipio,codigo_ibge,pop,uf,data,indice_isolamento
 0,AMERICANA,3501608,242018,SP,2021-05-14,0.37
 1,AMERICANA,3501608,242018,SP,2021-05-13,0.37
 2,AMERICANA,3501608,242018,SP,2021-05-12,0.36

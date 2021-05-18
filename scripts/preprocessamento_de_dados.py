@@ -13,7 +13,12 @@
     - Remove dia da semana
     - Adiciona o ano
     - Formata data no formato YYYY-MM-DD que ficam em ordem cronológica se ordenar a tabela em ordem crescente
-    - Renomeia as colunas 'Município1', 'Data' para 'municipio' e 'data'
+    - Renomeia as colunas :
+        - 'Média de Índice De Isolamento': 'indice_isolamento'
+        - 'Município1': 'municipio'
+        - 'Código Município IBGE': 'codigo_ibge'
+        - 'População estimada (2020)': 'pop'
+        - 'UF1': 'uf'
 
 """
 
@@ -27,10 +32,13 @@ isolation_sp = pd.read_csv('../data/20210516_isolamento.csv', sep=';', decimal='
 cases_sp = pd.read_csv('../data/20210516_dados_covid_municipios_sp.csv', sep=';', decimal=',')
 
 
-# Renomeando colunas
+# Renomeia colunas
 isolation_sp = isolation_sp.rename(columns={'Data': 'data',
                                             'Média de Índice De Isolamento': 'indice_isolamento',
-                                            'Município1': 'municipio'})
+                                            'Município1': 'municipio',
+                                            'Código Município IBGE': 'codigo_ibge',
+                                            'População estimada (2020)': 'pop',
+                                            'UF1': 'uf'})
 cases_sp = cases_sp.rename(columns={'datahora': 'data', 'nome_munic': 'municipio'})
 
 
@@ -104,9 +112,16 @@ if data_sao_paulo['indice_isolamento'].hasnans:
 print(data_sao_paulo.head(3))
 print(data_sao_paulo.tail(3))
 
+print(cases_sp.columns)
+print(isolation_sp.columns)
+
 isolation_sao_paulo.plot()
 plt.grid()
+plt.title('índice de isolamento social médio diário no Município de São Paulo')
+plt.xlabel('data')
 cases_sao_paulo.plot()
+plt.title('Número de novos casos diários de COVID-19 no Município de São Paulo')
+plt.xlabel('data')
 plt.grid()
 plt.show()
 

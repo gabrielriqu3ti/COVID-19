@@ -2,6 +2,6 @@
 % Projeto 1
 
 
-cases_sp = readtable("../data/20210516_dados_covid_municipios_sp.csv");
-% isolation_sp = dataframe("../data/20210516_isolamento.csv", "sep", ";");
+data_sp = readtable("../data/dados_covid_sp_preprocessado_py.csv");
+isolation_sp = readtable("../data/isolamento_sp_preprocessado_py.csv");
 
