@@ -8,11 +8,15 @@
  Pré-processamento do banco de dados gerais de Covid-19 por município:
     - Formata data no formato YYYY-MM-DD que ficam em ordem cronológica se ordenar a tabela em ordem crescente
     - Renomeia as colunas 'nome_munic', 'datahora' para 'municipio' e 'data'
+    - Muda o separador de colunas de ';' para ','
+    - Muda o separador decimal de ',' para '.'
 
  Pré-processamento do banco de dados de isolamento de Covid-19 por município:
     - Remove dia da semana
     - Adiciona o ano
     - Formata data no formato YYYY-MM-DD que ficam em ordem cronológica se ordenar a tabela em ordem crescente
+    - Muda o separador de colunas de ';' para ','
+    - Muda o separador decimal de ',' para '.'
     - Renomeia as colunas :
         - 'Média de Índice De Isolamento': 'indice_isolamento'
         - 'Município1': 'municipio'
@@ -22,9 +26,73 @@
 
 """
 
+import re
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+def save_data_from_city(city):
+    """
+    Salva e exibe o gráfico de novos casos de Covid-19 e o índice de isolamento social em um município do Estado de São Paulo.
+
+    Params:
+    _______
+    - city: str
+                 Nome do município do Estado de São Paulo a ser salvo
+    """
+    cases_city = cases_sp[cases_sp['municipio'] == city][['data', 'casos_novos', 'pop']]
+    isolation_city = isolation_sp[isolation_sp['municipio'] == city.upper()][['data', 'indice_isolamento']]
+
+    cases_city = cases_city.set_index('data')
+    isolation_city = isolation_city.set_index('data')
+
+    # Réune dados de São Paulo
+    data_city = cases_city.copy()
+    data_city = data_city.join(isolation_city)
+
+    # Lida com dados ausentes do Município de São Paulo
+    if data_city['casos_novos'].hasnans:
+        print(f"data_city['casos_novos'] has {len(data_city['casos_novos'].isna())} NaN que serão corrigidos")
+        data_city['casos_novos'].fillna(0, inplace=True)
+    if data_city['pop'].hasnans:
+        print(f"data_city['pop'] has {len(data_city['pop'].isna())} NaN que serão corrigidos")
+        data_city['pop'].fillna(data_city['pop'].median(), inplace=True)
+
+    if data_city['indice_isolamento'].hasnans:
+        print(
+            f"data_city['indice_isolamento'] has {len(data_city[data_city['indice_isolamento'].isna()])} NaN que serão corrigidos")
+        data_city['indice_isolamento'].fillna(data_city['indice_isolamento'].median(), inplace=True)
+
+    data_city['casos_novos_por_pop'] = data_city['casos_novos'] / data_city['pop']
+
+    # Inspeção
+    print()
+    print('Descrição data_city')
+    print(data_city.describe())
+
+    print()
+    print('Quantidade de dados')
+    print(f"Dados de {city:<15} : {sum(cases_sp[cases_sp['municipio'] == city]['casos_novos']):>7}")
+    print(f"Dados ignorados       : {sum(cases_sp[cases_sp['municipio'] == 'Ignorado']['casos_novos']):>7}")
+
+    isolation_city.plot()
+    plt.grid()
+    plt.title(f'Índice de isolamento social médio diário no Município de {city}')
+    plt.xlabel('data')
+
+    plt.figure()
+    cases_city['casos_novos'].plot()
+    plt.title(f'Número de novos casos diários de COVID-19 no Município de {city}')
+    plt.xlabel('data')
+    plt.grid()
+    plt.show()
+
+    city_fmt = re.sub(r"[âãàá]",  "a", city.lower())
+    city_fmt = re.sub(r" ",  "_", city_fmt)
+    city_fmt = re.sub(r"[^a-zA-Z0-9_]", "", city_fmt)
+
+    # Salva dados pré-processados
+    data_city.to_csv(f'../data/dados_{city_fmt}.csv')
 
 
 # Importação de dados
@@ -86,47 +154,27 @@ except ValueError:
                 print(data)
 
 
-# Seleciona dados de São Paulo
-cases_sao_paulo = cases_sp[cases_sp['municipio'] == 'São Paulo'][['data', 'casos_novos']]
-isolation_sao_paulo = isolation_sp[isolation_sp['municipio'] == 'SÃO PAULO'][['data', 'indice_isolamento']]
+# Salva dados de Botucatu, Campinas e São Paulo,
+save_data_from_city('Botucatu')
+save_data_from_city('Campinas')
+save_data_from_city('São Paulo')
 
-cases_sao_paulo = cases_sao_paulo.set_index('data')
-isolation_sao_paulo = isolation_sao_paulo.set_index('data')
+print()
+# Inspeção
+print('Descrição cases_sp')
+print(cases_sp.describe())
+print('Descrição isolation_sp')
+print(isolation_sp.describe())
+print('Descrição data_city')
 
-
-# Réune dados de São Paulo
-data_sao_paulo = cases_sao_paulo.copy()
-data_sao_paulo = data_sao_paulo.join(isolation_sao_paulo)
-
-
-# Lida com dados ausentes do Município de São Paulo
-if data_sao_paulo['casos_novos'].hasnans:
-    print(f"data_sao_paulo['casos_novos'] has {len(data_sao_paulo['casos_novos'].isna())} NaN")
-    data_sao_paulo['casos_novos'].fillna(0, inplace=True)
-if data_sao_paulo['indice_isolamento'].hasnans:
-    print(f"data_sao_paulo['indice_isolamento'] has {len(data_sao_paulo[data_sao_paulo['indice_isolamento'].isna()])} NaN")
-    data_sao_paulo['indice_isolamento'].fillna(data_sao_paulo['indice_isolamento'].median(), inplace=True)
-
-
-# Inspeção visual
-print(data_sao_paulo.head(3))
-print(data_sao_paulo.tail(3))
-
-print(cases_sp.columns)
-print(isolation_sp.columns)
-
-isolation_sao_paulo.plot()
-plt.grid()
-plt.title('índice de isolamento social médio diário no Município de São Paulo')
-plt.xlabel('data')
-cases_sao_paulo.plot()
-plt.title('Número de novos casos diários de COVID-19 no Município de São Paulo')
-plt.xlabel('data')
-plt.grid()
-plt.show()
+print()
+print('Quantidade de dados')
+print(f"Dados de Botucatu  : {sum(cases_sp[cases_sp['municipio'] == 'Botucatu']['casos_novos']):>7}")
+print(f"Dados de Campinas  : {sum(cases_sp[cases_sp['municipio'] == 'Campinas']['casos_novos']):>7}")
+print(f"Dados de São Paulo : {sum(cases_sp[cases_sp['municipio'] == 'São Paulo']['casos_novos']):>7}")
+print(f"Dados ignorados    : {sum(cases_sp[cases_sp['municipio'] == 'Ignorado']['casos_novos']):>7}")
 
 
 # Salva dados pré-processados
 cases_sp.to_csv('../data/dados_covid_sp_preprocessado_py.csv')
 isolation_sp.to_csv('../data/isolamento_sp_preprocessado_py.csv')
-data_sao_paulo.to_csv('../data/dados_sao_paulo.csv')
