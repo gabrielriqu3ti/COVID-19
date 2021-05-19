@@ -31,6 +31,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+
 def save_data_from_city(city):
     """
     Salva e exibe o gráfico de novos casos de Covid-19 e o índice de isolamento social em um município do Estado de São Paulo.
@@ -78,6 +79,7 @@ def save_data_from_city(city):
     isolation_city.plot()
     plt.grid()
     plt.title(f'Índice de isolamento social médio diário no Município de {city}')
+    plt.ylim((0, 1))
     plt.xlabel('data')
 
     plt.figure()
@@ -88,6 +90,10 @@ def save_data_from_city(city):
     plt.show()
 
     city_fmt = re.sub(r"[âãàá]",  "a", city.lower())
+    city_fmt = re.sub(r"[õó]",  "o", city_fmt)
+    city_fmt = re.sub(r"[éê]",  "e", city_fmt)
+    city_fmt = re.sub(r"[í]",  "i", city_fmt)
+    city_fmt = re.sub(r"[ú]",  "u", city_fmt)
     city_fmt = re.sub(r" ",  "_", city_fmt)
     city_fmt = re.sub(r"[^a-zA-Z0-9_]", "", city_fmt)
 
@@ -155,6 +161,7 @@ except ValueError:
 
 
 # Salva dados de Botucatu, Campinas e São Paulo,
+save_data_from_city('Araraquara')
 save_data_from_city('Botucatu')
 save_data_from_city('Campinas')
 save_data_from_city('São Paulo')
@@ -169,6 +176,7 @@ print('Descrição data_city')
 
 print()
 print('Quantidade de dados')
+print(f"Dados de Araraquara: {sum(cases_sp[cases_sp['municipio'] == 'Araraquara']['casos_novos']):>7}")
 print(f"Dados de Botucatu  : {sum(cases_sp[cases_sp['municipio'] == 'Botucatu']['casos_novos']):>7}")
 print(f"Dados de Campinas  : {sum(cases_sp[cases_sp['municipio'] == 'Campinas']['casos_novos']):>7}")
 print(f"Dados de São Paulo : {sum(cases_sp[cases_sp['municipio'] == 'São Paulo']['casos_novos']):>7}")
