@@ -671,30 +671,97 @@ else
     corr_diff_new_cases_isolation_tensor = zeros(correlation_final_delay - correlation_init_delay + 1,2,2);
     corr_cases_isolation_tensor = zeros(correlation_final_delay - correlation_init_delay + 1,2,2);
 
+    corr_new_cases_isolation_p_tensor = zeros(correlation_final_delay - correlation_init_delay + 1,2,2);
+    corr_diff_new_cases_isolation_p_tensor = zeros(correlation_final_delay - correlation_init_delay + 1,2,2);
+    corr_cases_isolation_p_tensor = zeros(correlation_final_delay - correlation_init_delay + 1,2,2);
+
+    corr_new_cases_isolation_upper_tensor = zeros(correlation_final_delay - correlation_init_delay + 1,2,2);
+    corr_diff_new_cases_isolation_upper_tensor = zeros(correlation_final_delay - correlation_init_delay + 1,2,2);
+    corr_cases_isolation_upper_tensor = zeros(correlation_final_delay - correlation_init_delay + 1,2,2);
+
+    corr_new_cases_isolation_lower_tensor = zeros(correlation_final_delay - correlation_init_delay + 1,2,2);
+    corr_diff_new_cases_isolation_lower_tensor = zeros(correlation_final_delay - correlation_init_delay + 1,2,2);
+    corr_cases_isolation_lower_tensor = zeros(correlation_final_delay - correlation_init_delay + 1,2,2);
+
+
     correlation_new_cases_by_delay = zeros(1, correlation_final_delay - correlation_init_delay + 1);
     correlation_diff_new_cases_by_delay = zeros(1, correlation_final_delay - correlation_init_delay + 1);
     correlation_cases_by_delay = zeros(1, correlation_final_delay - correlation_init_delay + 1);
     
+    correlation_new_cases_by_delay_p = zeros(1, correlation_final_delay - correlation_init_delay + 1);
+    correlation_diff_new_cases_by_delay_p = zeros(1, correlation_final_delay - correlation_init_delay + 1);
+    correlation_cases_by_delay_p = zeros(1, correlation_final_delay - correlation_init_delay + 1);
+    
+    correlation_new_cases_by_delay_upper = zeros(1, correlation_final_delay - correlation_init_delay + 1);
+    correlation_diff_new_cases_by_delay_upper = zeros(1, correlation_final_delay - correlation_init_delay + 1);
+    correlation_cases_by_delay_upper = zeros(1, correlation_final_delay - correlation_init_delay + 1);
+    
+    correlation_new_cases_by_delay_lower = zeros(1, correlation_final_delay - correlation_init_delay + 1);
+    correlation_diff_new_cases_by_delay_lower = zeros(1, correlation_final_delay - correlation_init_delay + 1);
+    correlation_cases_by_delay_lower = zeros(1, correlation_final_delay - correlation_init_delay + 1);
+    
     for delay_days = correlation_init_delay:correlation_final_delay
         if delay_days >= 0
-            corr_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2) = corrcoef(new_cases_per_pop_gaussian_7_notch(1+delay_days:n_days,1), isolation_gaussian_7_notch(1:n_days-delay_days, 1));
-            corr_diff_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2) = corrcoef(new_cases_diff(1+delay_days:n_days-1,1), isolation_gaussian_7_notch(1:n_days-delay_days-1, 1));
-            corr_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2) = corrcoef(cases(1+delay_days:n_days-1,1), isolation_gaussian_7_notch(1:n_days-delay_days-1, 1));
+            [corr_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2), ...
+                corr_new_cases_isolation_p_tensor(delay_days - correlation_init_delay + 1,1:2,1:2), ...
+                corr_new_cases_isolation_lower_tensor(delay_days - correlation_init_delay + 1,1:2,1:2), ...
+                corr_new_cases_isolation_upper_tensor(delay_days - correlation_init_delay + 1,1:2,1:2)...
+                ] = corrcoef(new_cases_per_pop_gaussian_7_notch(1+delay_days:n_days,1), isolation_gaussian_7_notch(1:n_days-delay_days, 1));
+            
+            [corr_diff_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2),...
+                corr_diff_new_cases_isolation_p_tensor(delay_days - correlation_init_delay + 1,1:2,1:2),...
+                corr_diff_new_cases_isolation_lower_tensor(delay_days - correlation_init_delay + 1,1:2,1:2),...
+                corr_diff_new_cases_isolation_upper_tensor(delay_days - correlation_init_delay + 1,1:2,1:2)...
+                ] = corrcoef(new_cases_diff(1+delay_days:n_days-1,1), isolation_gaussian_7_notch(1:n_days-delay_days-1, 1));
+            
+            [corr_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2),...
+                corr_cases_isolation_p_tensor(delay_days - correlation_init_delay + 1,1:2,1:2),...
+                corr_cases_isolation_lower_tensor(delay_days - correlation_init_delay + 1,1:2,1:2),...
+                corr_cases_isolation_upper_tensor(delay_days - correlation_init_delay + 1,1:2,1:2)...
+                ] = corrcoef(cases(1+delay_days:n_days-1,1), isolation_gaussian_7_notch(1:n_days-delay_days-1, 1));
         else
-            corr_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2) = corrcoef(new_cases_per_pop_gaussian_7_notch(1:n_days+delay_days,1), isolation_gaussian_7_notch(1-delay_days:n_days, 1));
-            corr_diff_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2) = corrcoef(new_cases_diff(1:n_days+delay_days-1,1), isolation_gaussian_7_notch(1-delay_days:n_days-1, 1));
-            corr_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2) = corrcoef(cases(1:n_days+delay_days-1,1), isolation_gaussian_7_notch(1-delay_days:n_days-1, 1));
+            [corr_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2), ...
+                corr_new_cases_isolation_p_tensor(delay_days - correlation_init_delay + 1,1:2,1:2), ...
+                corr_new_cases_isolation_lower_tensor(delay_days - correlation_init_delay + 1,1:2,1:2), ...
+                corr_new_cases_isolation_upper_tensor(delay_days - correlation_init_delay + 1,1:2,1:2), ...
+                ] = corrcoef(new_cases_per_pop_gaussian_7_notch(1:n_days+delay_days,1), isolation_gaussian_7_notch(1-delay_days:n_days, 1));
+
+            [corr_diff_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2),...
+                corr_diff_new_cases_isolation_p_tensor(delay_days - correlation_init_delay + 1,1:2,1:2),...
+                corr_diff_new_cases_isolation_lower_tensor(delay_days - correlation_init_delay + 1,1:2,1:2),...
+                corr_diff_new_cases_isolation_upper_tensor(delay_days - correlation_init_delay + 1,1:2,1:2)...
+                ] = corrcoef(new_cases_diff(1:n_days+delay_days-1,1), isolation_gaussian_7_notch(1-delay_days:n_days-1, 1));
+            
+            [corr_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2),...
+                corr_cases_isolation_p_tensor(delay_days - correlation_init_delay + 1,1:2,1:2),...
+                corr_cases_isolation_lower_tensor(delay_days - correlation_init_delay + 1,1:2,1:2),...
+                corr_cases_isolation_upper_tensor(delay_days - correlation_init_delay + 1,1:2,1:2),...
+                ] = corrcoef(cases(1:n_days+delay_days-1,1), isolation_gaussian_7_notch(1-delay_days:n_days-1, 1));
         end
         correlation_new_cases_by_delay(1, delay_days - correlation_init_delay + 1) = corr_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1,2);
+        correlation_new_cases_by_delay_p(1, delay_days - correlation_init_delay + 1) = corr_new_cases_isolation_p_tensor(delay_days - correlation_init_delay + 1,1,2);
+        correlation_new_cases_by_delay_lower(1, delay_days - correlation_init_delay + 1) = corr_new_cases_isolation_lower_tensor(delay_days - correlation_init_delay + 1,1,2);
+        correlation_new_cases_by_delay_upper(1, delay_days - correlation_init_delay + 1) = corr_new_cases_isolation_upper_tensor(delay_days - correlation_init_delay + 1,1,2);
+        
         correlation_diff_new_cases_by_delay(1, delay_days - correlation_init_delay + 1) = corr_diff_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1,2);
+        correlation_diff_new_cases_by_delay_p(1, delay_days - correlation_init_delay + 1) = corr_diff_new_cases_isolation_p_tensor(delay_days - correlation_init_delay + 1,1,2);
+        correlation_diff_new_cases_by_delay_lower(1, delay_days - correlation_init_delay + 1) = corr_diff_new_cases_isolation_lower_tensor(delay_days - correlation_init_delay + 1,1,2);
+        correlation_diff_new_cases_by_delay_upper(1, delay_days - correlation_init_delay + 1) = corr_diff_new_cases_isolation_upper_tensor(delay_days - correlation_init_delay + 1,1,2);
+
         correlation_cases_by_delay(1, delay_days - correlation_init_delay + 1) = corr_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1,2);
+        correlation_cases_by_delay_p(1, delay_days - correlation_init_delay + 1) = corr_cases_isolation_p_tensor(delay_days - correlation_init_delay + 1,1,2);
+        correlation_cases_by_delay_lower(1, delay_days - correlation_init_delay + 1) = corr_cases_isolation_lower_tensor(delay_days - correlation_init_delay + 1,1,2);
+        correlation_cases_by_delay_upper(1, delay_days - correlation_init_delay + 1) = corr_cases_isolation_upper_tensor(delay_days - correlation_init_delay + 1,1,2);
     end
     
     delay_days = correlation_init_delay:correlation_final_delay;
         
     %% Figure 12
     figure(12)
-    plot(delay_days, correlation_new_cases_by_delay);
+    fill([delay_days, fliplr(delay_days)], [correlation_new_cases_by_delay_lower, fliplr(correlation_new_cases_by_delay_upper)], ...
+    bar_color_src, 'FaceAlpha', 0.5, 'EdgeColor', bar_color_src, 'LineStyle', '--')
+    hold on
+    plot(delay_days, correlation_new_cases_by_delay, 'Color', marker_color_src, 'LineStyle', '-');
     hold on
     plot([0, 0], [-1, 1], 'k--');
     hold on
@@ -703,6 +770,7 @@ else
     title(['Correlograma por atraso entre o isolamento social e o número de casos diários em ', city])
     xlabel('Diferença de dias entre o dia de coleta do isolamento social e o dia de coleta dos casos diários')
     ylabel('Correlação entre novos casos diários e índice de isolamento social')
+    legend('intervalo com 95% confiança', 'correlação')
     ylim([-1, 1])
     xlim([correlation_init_delay, correlation_final_delay])
     
@@ -712,7 +780,10 @@ else
     
     %% Figure 13
     figure(13)
-    plot(delay_days, correlation_diff_new_cases_by_delay);
+    fill([delay_days, fliplr(delay_days)], [correlation_diff_new_cases_by_delay_lower, fliplr(correlation_diff_new_cases_by_delay_upper)], ...
+    bar_color_src, 'FaceAlpha', 0.5, 'EdgeColor', bar_color_src, 'LineStyle', '--')
+    hold on
+    plot(delay_days, correlation_diff_new_cases_by_delay, 'Color', marker_color_src, 'LineStyle', '-');
     hold on
     plot([0, 0], [-1, 1], 'k--');
     hold on
@@ -721,6 +792,7 @@ else
     title(['Correlograma por atraso entre o isolamento social e a variação diária do número de casos diários em ', city])
     xlabel('Diferença de dias entre o dia de coleta do isolamento social e o dia de coleta da variação diária dos casos diários')
     ylabel('Correlação entre a variação diária de novos casos diários e índice de isolamento social')
+    legend('intervalo com 95% confiança', 'correlação')
     ylim([-1, 1])
     xlim([correlation_init_delay, correlation_final_delay])
         
@@ -730,7 +802,10 @@ else
     
     %% Figure 14
     figure(14)
-    plot(delay_days, correlation_cases_by_delay);
+    fill([delay_days, fliplr(delay_days)], [correlation_cases_by_delay_lower, fliplr(correlation_cases_by_delay_upper)], ...
+    bar_color_src, 'FaceAlpha', 0.5, 'EdgeColor', bar_color_src, 'LineStyle', '--')
+    hold on
+    plot(delay_days, correlation_cases_by_delay, 'Color', marker_color_src, 'LineStyle', '-');
     hold on
     plot([0, 0], [-1, 1], 'k--');
     hold on
@@ -739,6 +814,7 @@ else
     title(['Correlograma por atraso entre o isolamento social e o número de casos acumulados em ', city])
     xlabel('Diferença de dias entre o dia de coleta do isolamento social e o dia de coleta dos casos acumulados')
     ylabel('Correlação entre os casos acumulados e índice de isolamento social')
+    legend('intervalo com 95% confiança', 'correlação')
     ylim([-1, 1])
     xlim([correlation_init_delay, correlation_final_delay])
     
