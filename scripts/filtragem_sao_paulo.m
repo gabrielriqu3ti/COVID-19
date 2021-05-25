@@ -6,7 +6,7 @@ r_c = 0.999;
 r_i = 0.9;
 per_pop = 100000;
 city = 'São Paulo';
-save = true;
+save = false;
 correlation_init_delay = -300;
 correlation_final_delay = 300;
 
@@ -725,7 +725,7 @@ else
     xlim([correlation_init_delay, correlation_final_delay])
         
     if save
-        saveas(gcf, '../images/sao_paulo_correlograma_novos_casos.png')
+        saveas(gcf, '../images/sao_paulo_correlograma_variacao_novos_casos.png')
     end
     
     %% Figure 14
