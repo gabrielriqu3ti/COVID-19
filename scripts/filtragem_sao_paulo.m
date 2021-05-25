@@ -6,6 +6,9 @@ r_c = 0.999;
 r_i = 0.9;
 per_pop = 100000;
 city = 'São Paulo';
+save = true;
+correlation_init_delay = -300;
+correlation_final_delay = 300;
 
 %% Fases
 
@@ -168,7 +171,9 @@ title(['Filtragem gaussiana 7 do número de novos casos diários de COVID-19 em ',
 legend('gaussian 7')
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 
-saveas(gcf, '../images/sao_paulo_novos_casos_filtragem.png')
+if save
+    saveas(gcf, '../images/sao_paulo_novos_casos_filtragem.png')
+end
 
 %% Figure 2
 figure(2)
@@ -228,8 +233,9 @@ title(['Filtragem gaussiana 7 e notch com r=', num2str(r_c), ' do número de novo
 legend('gaussian 7')
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 
-saveas(gcf, '../images/sao_paulo_novos_casos_filtragem_notch.png')
-
+if save
+    saveas(gcf, '../images/sao_paulo_novos_casos_filtragem_notch.png')
+end
 
 %% Figure 3
 figure(3)
@@ -289,8 +295,9 @@ title(['Filtragem gaussiana 7 do número de novos casos diários de COVID-19 por '
 legend('gaussian 7')
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 
-saveas(gcf, '../images/sao_paulo_novos_casos_por_pop_filtragem.png')
-
+if save
+    saveas(gcf, '../images/sao_paulo_novos_casos_por_pop_filtragem.png')
+end
 
 %% Figure 4
 figure(4)
@@ -350,8 +357,9 @@ title(['Gaussiana 7 e notch com r=', num2str(r_c), ' do número de novos casos po
 legend('gaussian 7')
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 
-saveas(gcf, '../images/sao_paulo_novos_casos_por_pop_filtragem_notch.png')
-
+if save
+    saveas(gcf, '../images/sao_paulo_novos_casos_por_pop_filtragem_notch.png')
+end
 
 %% Figure 5
 figure(5)
@@ -419,7 +427,9 @@ legend('gaussian 7')
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 ylim([0, 1])
 
-saveas(gcf, '../images/sao_paulo_isolamento_filtragem.png')
+if save
+    saveas(gcf, '../images/sao_paulo_isolamento_filtragem.png')
+end
 
 
 %% Figure 6
@@ -488,8 +498,9 @@ legend('gaussian 7')
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 ylim([0, 1])
 
-saveas(gcf, '../images/sao_paulo_isolamento_filtragem_notch.png')
-
+if save
+    saveas(gcf, '../images/sao_paulo_isolamento_filtragem_notch.png')
+end
 
 %% Figura 7
 figure(7)
@@ -527,15 +538,15 @@ title(['Índice de isolamento social médio diário em ', city])
 legend('quarentena', 'original')
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 ylim([0, 1])
-
-saveas(gcf, '../images/sao_paulo_dados_originais.png')
-
+if save
+    saveas(gcf, '../images/sao_paulo_dados_originais.png')
+end
 
 %% Figura 8
 
 figure(8)
 subplot(311)
-fill([quarantene_begin, quarantene_end, quarantene_end, quarantene_begin], [0, 0, 10000, 10000], ...
+fill([quarantene_begin, quarantene_end, quarantene_end, quarantene_begin], [0, 0, 4000, 4000], ...
     quarantene_color, 'FaceAlpha', 0.5, 'EdgeColor', 'none')
 hold on
 stem(data_sao_paulo.data, new_cases_gaussian_7_notch, 'filled', 'MarkerSize', 3,...
@@ -563,15 +574,179 @@ hold on
 stem(data_sao_paulo.data, isolation_gaussian_7_notch, 'filled', 'MarkerSize', 3,...
     'LineWidth', 0.1, 'Color', bar_color_src, 'MarkerFaceColor', marker_color_src, 'MarkerEdgeColor', marker_color_src)
 hold off
-title(['Índice de isolamento social médio diário em ', city])
+title(['Gaussiana 7 e notch com r=', num2str(r_c), ' do índice de isolamento social médio diário em ', city])
 legend('quarentena', ['gaussian 7 notch r=', num2str(r_i)])
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 ylim([0, 1])
 
-saveas(gcf, '../images/sao_paulo_dados_filtrados.png')
+if save
+    saveas(gcf, '../images/sao_paulo_dados_filtrados.png')
+end
 
 
-%% Correlação Linear
+%% Figura 9
+
+figure(9)
+subplot(221)
+scatter(new_cases_gaussian_7_notch, isolation_gaussian_7_notch, '.b')
+title(['Novos casos vs isolamento social em ', city])
+
+subplot(222)
+scatter(new_cases_gaussian_7_notch(27:n_days, 1), isolation_gaussian_7_notch(27:n_days, 1), '.b')
+title(['Novos casos vs isolamento social em ', city])
+
+subplot(223)
+scatter(new_cases_gaussian_7_notch(8:n_days, 1), isolation_gaussian_7_notch(1:n_days-7, 1), '.r')
+title(['Novos casos vs isolamento social na semana anterior em ', city])
+
+subplot(224)
+scatter(new_cases_gaussian_7_notch(1:n_days-7, 1), isolation_gaussian_7_notch(8:n_days, 1), '.g')
+title(['Novos casos vs isolamento social na semana posterior em ', city])
+
+% if save
+% saveas(gcf, '../images/sao_paulo_dados_filtrados.png')
+% end
+
+%% Figura 10
+
+new_cases_diff = new_cases_gaussian_7_notch(2:n_days,1) - new_cases_gaussian_7_notch(1:n_days - 1,1);
+
+figure(10)
+subplot(221)
+scatter(new_cases_diff, isolation_gaussian_7_notch(1:n_days-1), '.b')
+title(['Variação de novos casos vs isolamento social em ', city])
+
+subplot(222)
+scatter(new_cases_diff(27:n_days-1, 1), isolation_gaussian_7_notch(27:n_days-1, 1), '.b')
+title(['Variação de novos casos vs isolamento social em ', city])
+
+subplot(223)
+scatter(new_cases_diff(8:n_days-1, 1), isolation_gaussian_7_notch(1:n_days-8, 1), '.r')
+title(['Variação de novos casos vs isolamento social na semana anterior em ', city])
+
+subplot(224)
+scatter(new_cases_diff(1:n_days-7, 1), isolation_gaussian_7_notch(8:n_days, 1), '.g')
+title(['Variação de novos casos vs isolamento social na semana posterior em ', city])
+
+% if save
+% saveas(gcf, '../images/sao_paulo_dados_filtrados.png')
+% end
+
+%% Figure 11
+cases = zeros(n_days,1);
+cases(1, 1) = new_cases_gaussian_7_notch(1,1);
+for i=2:n_days
+    cases(i, 1) = cases(i-1, 1) + new_cases_gaussian_7_notch(i,1);
+end
+
+figure(11)
+subplot(221)
+scatter(cases, isolation_gaussian_7_notch, '.b')
+title(['Casos vs isolamento social em ', city])
+
+subplot(222)
+scatter(cases(27:n_days, 1), isolation_gaussian_7_notch(27:n_days, 1), '.b')
+title(['Casos vs isolamento social em ', city])
+
+subplot(223)
+scatter(cases(8:n_days, 1), isolation_gaussian_7_notch(1:n_days-7, 1), '.r')
+title(['Casos vs isolamento social na semana anterior em ', city])
+
+subplot(224)
+scatter(cases(1:n_days-7, 1), isolation_gaussian_7_notch(8:n_days, 1), '.g')
+title(['Casos vs isolamento social na semana posterior em ', city])
+
+% if save
+% saveas(gcf, '../images/sao_paulo_dados_filtrados.png')
+% end
+
+
+%% Correlograma
+
+if correlation_final_delay < correlation_init_delay
+    exit(-1)
+else
+    
+    corr_new_cases_isolation_tensor = zeros(correlation_final_delay - correlation_init_delay + 1,2,2);
+    corr_diff_new_cases_isolation_tensor = zeros(correlation_final_delay - correlation_init_delay + 1,2,2);
+    corr_cases_isolation_tensor = zeros(correlation_final_delay - correlation_init_delay + 1,2,2);
+
+    correlation_new_cases_by_delay = zeros(1, correlation_final_delay - correlation_init_delay + 1);
+    correlation_diff_new_cases_by_delay = zeros(1, correlation_final_delay - correlation_init_delay + 1);
+    correlation_cases_by_delay = zeros(1, correlation_final_delay - correlation_init_delay + 1);
+    
+    for delay_days = correlation_init_delay:correlation_final_delay
+        if delay_days >= 0
+            corr_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2) = corrcoef(new_cases_per_pop_gaussian_7_notch(1+delay_days:n_days,1), isolation_gaussian_7_notch(1:n_days-delay_days, 1));
+            corr_diff_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2) = corrcoef(new_cases_diff(1+delay_days:n_days-1,1), isolation_gaussian_7_notch(1:n_days-delay_days-1, 1));
+            corr_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2) = corrcoef(cases(1+delay_days:n_days-1,1), isolation_gaussian_7_notch(1:n_days-delay_days-1, 1));
+        else
+            corr_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2) = corrcoef(new_cases_per_pop_gaussian_7_notch(1:n_days+delay_days,1), isolation_gaussian_7_notch(1-delay_days:n_days, 1));
+            corr_diff_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2) = corrcoef(new_cases_diff(1:n_days+delay_days-1,1), isolation_gaussian_7_notch(1-delay_days:n_days-1, 1));
+            corr_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1:2,1:2) = corrcoef(cases(1:n_days+delay_days-1,1), isolation_gaussian_7_notch(1-delay_days:n_days-1, 1));
+        end
+        correlation_new_cases_by_delay(1, delay_days - correlation_init_delay + 1) = corr_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1,2);
+        correlation_diff_new_cases_by_delay(1, delay_days - correlation_init_delay + 1) = corr_diff_new_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1,2);
+        correlation_cases_by_delay(1, delay_days - correlation_init_delay + 1) = corr_cases_isolation_tensor(delay_days - correlation_init_delay + 1,1,2);
+    end
+    
+    delay_days = correlation_init_delay:correlation_final_delay;
+        
+    %% Figure 12
+    figure(12)
+    plot(delay_days, correlation_new_cases_by_delay);
+    hold on
+    plot([0, 0], [-1, 1], 'k--');
+    hold on
+    plot([correlation_init_delay, correlation_final_delay], [0, 0], 'k--');
+    hold off
+    title(['Correlograma por atraso entre o isolamento social e o número de casos diários em ', city])
+    xlabel('Diferença de dias entre o dia de coleta do isolamento social e o dia de coleta dos casos diários')
+    ylabel('Correlação entre novos casos diários e índice de isolamento social')
+    ylim([-1, 1])
+    xlim([correlation_init_delay, correlation_final_delay])
+    
+    if save
+        saveas(gcf, '../images/sao_paulo_correlograma_novos_casos.png')
+    end
+    
+    %% Figure 13
+    figure(13)
+    plot(delay_days, correlation_diff_new_cases_by_delay);
+    hold on
+    plot([0, 0], [-1, 1], 'k--');
+    hold on
+    plot([correlation_init_delay, correlation_final_delay], [0, 0], 'k--');
+    hold off
+    title(['Correlograma por atraso entre o isolamento social e a variação diária do número de casos diários em ', city])
+    xlabel('Diferença de dias entre o dia de coleta do isolamento social e o dia de coleta da variação diária dos casos diários')
+    ylabel('Correlação entre a variação diária de novos casos diários e índice de isolamento social')
+    ylim([-1, 1])
+    xlim([correlation_init_delay, correlation_final_delay])
+        
+    if save
+        saveas(gcf, '../images/sao_paulo_correlograma_novos_casos.png')
+    end
+    
+    %% Figure 14
+    figure(14)
+    plot(delay_days, correlation_cases_by_delay);
+    hold on
+    plot([0, 0], [-1, 1], 'k--');
+    hold on
+    plot([correlation_init_delay, correlation_final_delay], [0, 0], 'k--');
+    hold off
+    title(['Correlograma por atraso entre o isolamento social e o número de casos acumulados em ', city])
+    xlabel('Diferença de dias entre o dia de coleta do isolamento social e o dia de coleta dos casos acumulados')
+    ylabel('Correlação entre os casos acumulados e índice de isolamento social')
+    ylim([-1, 1])
+    xlim([correlation_init_delay, correlation_final_delay])
+    
+    if save
+        saveas(gcf, '../images/sao_paulo_correlograma_casos_acumulados.png')
+    end
+    
+end
 
 corr_new_cases_isolation = corrcoef(new_cases_per_pop_gaussian_7_notch, isolation_gaussian_7_notch);
 corr_new_cases_isolation_before = corrcoef(new_cases_per_pop_gaussian_7_notch(8:n_days,1), isolation_gaussian_7_notch(1:n_days-7, 1));
@@ -581,16 +756,7 @@ corr_new_cases_isolation = corr_new_cases_isolation(1,2);
 corr_new_cases_isolation_before = corr_new_cases_isolation_before(1,2);
 corr_new_cases_isolation_after = corr_new_cases_isolation_after(1,2);
 
-disp(['Correlação linear entre o número de casos diários e o índice de isolamento social: ', num2str(corr_new_cases_isolation(1,2))])
-disp(['Correlação linear entre o número de casos diários e o índice de isolamento social uma semana antes: ', num2str(corr_new_cases_isolation_before(1,2))])
-disp(['Correlação linear entre o número de casos diários e o índice de isolamento social uma semana depois: ', num2str(corr_new_cases_isolation_after(1,2))])
-
-%% Teste t para avaliar se o coeficiente 
-
-t_new_cases_isolation = corr_new_cases_isolation * sqrt(n_days - 1) ./ sqrt(1 - corr_new_cases_isolation^2);
-t_new_cases_isolation_before = corr_new_cases_isolation_before * sqrt(n_days - 1 - 7) ./ sqrt(1 - corr_new_cases_isolation_before^2);
-t_new_cases_isolation_after = corr_new_cases_isolation_after * sqrt(n_days - 1 - 7) ./ sqrt(1 - corr_new_cases_isolation_after^2);
-
-% TODO: Realizar o teste t para ver se a hipótese H_0 de que o coeficiente
-% de correlação é nulo pode ser rejeitada ou não.
+disp(['Correlação linear entre o número de casos diários e o índice de isolamento social: ', num2str(corr_new_cases_isolation)])
+disp(['Correlação linear entre o número de casos diários e o índice de isolamento social uma semana antes: ', num2str(corr_new_cases_isolation_before)])
+disp(['Correlação linear entre o número de casos diários e o índice de isolamento social uma semana depois: ', num2str(corr_new_cases_isolation_after)])
 

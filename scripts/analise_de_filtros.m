@@ -20,7 +20,7 @@ Ts = 24 * 60 * 60; % período de amostragem em segundos (1 dia)
 num_moving_avg_3 = [1, 1, 1];
 den_moving_avg_3 = [0, 3];
 
-H_moving_avg_3 = filt(num_media_movel_3, den_moving_avg_3, Ts)
+H_moving_avg_3 = filt(num_moving_avg_3, den_moving_avg_3, Ts)
 
 figure(1)
 freqz(num_moving_avg_3, den_moving_avg_3, w)
@@ -134,11 +134,11 @@ saveas(gcf, '../images/bode_gaussiano_3.png')
 
 
 %% Filtro Gaussiano de desvio-padrão de 2 dias
-% h_s[n] =  (Soma de k=-oo até oo de exp(-((n + k)/s)^2/2)) /
-% (Soma de k=-oo até oo de exp(-(k/s)^2/2))
+% h_s[n] =  (Soma de k=-oo até oo de exp(-((n + k)/2)^2/2)) /
+% (Soma de k=-oo até oo de exp(-(k/2)^2/2))
 % Transformada z:
-% H_s(z) = (Soma de k=-oo até oo de exp(-((n + k)/s)^2/2)) /
-% (Soma de k=-oo até oo de exp(-(k/s)^2/2))
+% H_s(z) = (Soma de k=-oo até oo de exp(-((n + k)/2)^2/2)) /
+% (Soma de k=-oo até oo de exp(-(k/2)^2/2))
 
 gauss = @(x, mu, sigma) exp(-((x - mu)./sigma).^2./2);
 

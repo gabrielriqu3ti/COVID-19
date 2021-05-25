@@ -30,6 +30,7 @@ function y = conv_moving_avg_filter(x, filter_size)
     else
         % Criação de sinal ímpar
         x_odd = zeros(size(signal_size + 1), 1);
+        x_odd(1:signal_size, 1) = x;
 
         filter_id_0 = (signal_size + 2) / 2;
 

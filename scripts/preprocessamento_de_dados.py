@@ -10,6 +10,7 @@
     - Renomeia as colunas 'nome_munic', 'datahora' para 'municipio' e 'data'
     - Muda o separador de colunas de ';' para ','
     - Muda o separador decimal de ',' para '.'
+    - Considera dados faltantes de novos casos diários como nulos
 
  Pré-processamento do banco de dados de isolamento de Covid-19 por município:
     - Remove dia da semana
@@ -23,6 +24,7 @@
         - 'Código Município IBGE': 'codigo_ibge'
         - 'População estimada (2020)': 'pop'
         - 'UF1': 'uf'
+    - Considera dados faltantes de índice de isolamento social médio como a mediana daquele município.
 
 """
 
