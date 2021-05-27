@@ -14,7 +14,7 @@ function y = conv_gaussian_filter(x, two_std_dev_plus_one)
 
     std_dev = (two_std_dev_plus_one - 1) / 2;
 
-    filter_size = two_std_dev_plus_one + 4;
+    filter_size = 2 * std_dev^4 + 1 + 4;
     filter_size_minus_1_half = (filter_size - 1) / 2;
 
     [signal_size, ~] = size(x);

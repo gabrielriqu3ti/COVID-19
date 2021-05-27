@@ -2,15 +2,14 @@
 % Projeto 1
 
 %% Customização
-r_c = 0.999;
-r_i = 0.9;
+r_0_999 = 0.999;
+r_0_99 = 0.99;
+r_0_9 = 0.9;
 per_pop = 100000;
 city = 'São Paulo';
 save = false;
-correlation_init_delay = -300;
-correlation_final_delay = 300;
-
-%% Fases
+correlation_init_delay = -30;
+correlation_final_delay = 30;
 
 % início da quarentena: 2020-03-22 -> hoje (2021-05-15)
 quarantene_begin = datetime('2020-03-22', 'InputFormat', 'yyyy-MM-dd');
@@ -36,18 +35,27 @@ pop_sao_paulo = data_sao_paulo.pop(1);
 w = 0.01:0.01:2*pi;
 w0 = 2*pi/7;
 
-C_c = (1 - 2*r_c*cos(w0) + r_c^2) / (2 - 2*cos(w0));
-b_c = C_c * [1, -2*cos(w0), 1];
-a_c = [1, -2*r_c*cos(w0), r_c^2];
+% Notch filter for r = 0.999
+C_0_999 = (1 - 2*r_0_999*cos(w0) + r_0_999^2) / (2 - 2*cos(w0));
+num_0_999 = C_0_999 * [1, -2*cos(w0), 1];
+den_0_999 = [1, -2*r_0_999*cos(w0), r_0_999^2];
 
-C_i = (1 - 2*r_i*cos(w0) + r_i^2) / (2 - 2*cos(w0));
-b_i = C_i * [1, -2*cos(w0), 1];
-a_i = [1, -2*r_i*cos(w0), r_i^2];
+% Notch filter for r = 0.99
+C_0_99 = (1 - 2*r_0_99*cos(w0) + r_0_99^2) / (2 - 2*cos(w0));
+num_0_99 = C_0_99 * [1, -2*cos(w0), 1];
+den_0_99 = [1, -2*r_0_99*cos(w0), r_0_99^2];
 
+% Notch filter for r = 0.9
+C_0_9 = (1 - 2*r_0_9*cos(w0) + r_0_9^2) / (2 - 2*cos(w0));
+num_0_9 = C_0_9 * [1, -2*cos(w0), 1];
+den_0_9 = [1, -2*r_0_9*cos(w0), r_0_9^2];
 
-% figure(1)
-% freqz(b_c, a_c, w)
-% title(['Diagrama de Bold do Filtro do tipo notch com r=', num2str(r_c)])
+% Butterworth
+wc = 2/7; % normalização de wc = 2pi/7
+order = 3;
+
+[num_butter, den_butter] = butter(order, wc);
+
 
 %% Filtragem
 new_cases_moving_avg_3 = conv_moving_avg_filter(data_sao_paulo.casos_novos, 3);
@@ -56,8 +64,15 @@ new_cases_moving_avg_7 = conv_moving_avg_filter(data_sao_paulo.casos_novos, 7);
 new_cases_gaussian_3 = conv_gaussian_filter(data_sao_paulo.casos_novos, 3);
 new_cases_gaussian_5 = conv_gaussian_filter(data_sao_paulo.casos_novos, 5);
 new_cases_gaussian_7 = conv_gaussian_filter(data_sao_paulo.casos_novos, 7);
+new_cases_butterworth = filter(num_butter, den_butter, data_sao_paulo.casos_novos);
 
-new_cases_notch = filter(b_c, a_c, data_sao_paulo.casos_novos);
+new_cases_notch_0_9 = filter(num_0_9, den_0_9, data_sao_paulo.casos_novos);
+new_cases_notch_0_99 = filter(num_0_99, den_0_99, data_sao_paulo.casos_novos);
+new_cases_notch_0_999 = filter(num_0_999, den_0_999, data_sao_paulo.casos_novos);
+new_cases_notch = new_cases_notch_0_999;
+r_c = r_0_999;
+
+new_cases_butterworth_notch = filter(num_butter, den_butter, new_cases_notch);
 new_cases_moving_avg_3_notch = conv_moving_avg_filter(new_cases_notch, 3);
 new_cases_moving_avg_5_notch = conv_moving_avg_filter(new_cases_notch, 5);
 new_cases_moving_avg_7_notch = conv_moving_avg_filter(new_cases_notch, 7);
@@ -73,7 +88,7 @@ new_cases_per_pop_gaussian_3 = conv_gaussian_filter(data_sao_paulo.casos_novos_p
 new_cases_per_pop_gaussian_5 = conv_gaussian_filter(data_sao_paulo.casos_novos_por_pop, 5);
 new_cases_per_pop_gaussian_7 = conv_gaussian_filter(data_sao_paulo.casos_novos_por_pop, 7);
 
-new_cases_per_pop_notch = filter(b_c, a_c, data_sao_paulo.casos_novos_por_pop);
+new_cases_per_pop_notch = filter(num_0_999, den_0_999, data_sao_paulo.casos_novos_por_pop);
 new_cases_per_pop_moving_avg_3_notch = conv_moving_avg_filter(new_cases_per_pop_notch, 3);
 new_cases_per_pop_moving_avg_5_notch = conv_moving_avg_filter(new_cases_per_pop_notch, 5);
 new_cases_per_pop_moving_avg_7_notch = conv_moving_avg_filter(new_cases_per_pop_notch, 7);
@@ -88,27 +103,41 @@ isolation_moving_avg_7 = conv_moving_avg_filter(data_sao_paulo.indice_isolamento
 isolation_gaussian_3 = conv_gaussian_filter(data_sao_paulo.indice_isolamento, 3);
 isolation_gaussian_5 = conv_gaussian_filter(data_sao_paulo.indice_isolamento, 5);
 isolation_gaussian_7 = conv_gaussian_filter(data_sao_paulo.indice_isolamento, 7);
+isolation_butterworth = filter(num_butter, den_butter, data_sao_paulo.indice_isolamento);
 
-isolation_notch = filter(b_i, a_i, data_sao_paulo.indice_isolamento);
+isolation_notch_0_9 = filter(num_0_9, den_0_9, data_sao_paulo.indice_isolamento);
+isolation_notch_0_99 = filter(num_0_99, den_0_99, data_sao_paulo.indice_isolamento);
+isolation_notch_0_999 = filter(num_0_999, den_0_999, data_sao_paulo.indice_isolamento);
+isolation_notch = isolation_notch_0_999;
+r_i = r_0_999;
+
 isolation_moving_avg_3_notch = conv_moving_avg_filter(isolation_notch, 3);
 isolation_moving_avg_5_notch = conv_moving_avg_filter(isolation_notch, 5);
 isolation_moving_avg_7_notch = conv_moving_avg_filter(isolation_notch, 7);
 isolation_gaussian_3_notch = conv_gaussian_filter(isolation_notch, 3);
 isolation_gaussian_5_notch = conv_gaussian_filter(isolation_notch, 5);
 isolation_gaussian_7_notch = conv_gaussian_filter(isolation_notch, 7);
+isolation_butterworth_notch = filter(num_butter, den_butter, isolation_notch);
+
 
 %% Cores
 bar_color_src = [0.6, 0.6, 1];
 bar_color_3 = [0.9, 0.4, 0.5];
 bar_color_5 = [0.95, 0.6, 0.2];
 bar_color_7 = [0.8, 0.4, 0.9];
-bar_color_notch = [0.6, 0.8, 0.3];
+bar_color_butter = [0.6, 0.8, 0.3];
+bar_color_notch_0_9 = bar_color_3;
+bar_color_notch_0_99 = bar_color_5;
+bar_color_notch_0_999 = bar_color_7;
 
 marker_color_src = [0 0.4 0.7];
 marker_color_3 = [0.7, 0.2, 0.3];
 marker_color_5 = [0.85, 0.32, 0.1];
 marker_color_7 = [0.5, 0.2, 0.6];
-marker_color_notch = [0.3, 0.6, 0.1];
+marker_color_butter = [0.3, 0.6, 0.1];
+marker_color_notch_0_9 = marker_color_3;
+marker_color_notch_0_99 = marker_color_5;
+marker_color_notch_0_999 = marker_color_7;
 
 quarantene_color = [0.99, 0.7, 0.7];
 
@@ -123,10 +152,10 @@ legend('original')
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 
 subplot(422)
-stem(data_sao_paulo.data, new_cases_notch, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_notch, 'MarkerFaceColor', marker_color_notch, 'MarkerEdgeColor', marker_color_notch)
-title(['Filtragem notch com r=', num2str(r_c),' do número de novos casos diários de COVID-19 em ', city])
-legend(['notch r=', num2str(r_c)])
+stem(data_sao_paulo.data, new_cases_butterworth, 'filled', 'MarkerSize', 3,...
+    'LineWidth', 0.1, 'Color', bar_color_butter, 'MarkerFaceColor', marker_color_butter, 'MarkerEdgeColor', marker_color_butter)
+title(['Filtragem butterworth do número de novos casos diários de COVID-19 em ', city])
+legend('butterworth de ordem 3 e wc=2\pi/7')
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 
 subplot(423)
@@ -175,8 +204,44 @@ if save
     saveas(gcf, '../images/sao_paulo_novos_casos_filtragem.png')
 end
 
+
 %% Figure 2
 figure(2)
+subplot(221)
+stem(data_sao_paulo.data, data_sao_paulo.casos_novos, 'filled', 'MarkerSize', 3,...
+    'LineWidth', 0.1, 'Color', bar_color_src, 'MarkerFaceColor', marker_color_src, 'MarkerEdgeColor', marker_color_src)
+title(['Número de novos casos diários de COVID-19 em ', city])
+legend('original')
+xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
+
+subplot(222)
+stem(data_sao_paulo.data, new_cases_notch_0_9, 'filled', 'MarkerSize', 3,...
+    'LineWidth', 0.1, 'Color', bar_color_notch_0_9, 'MarkerFaceColor', marker_color_notch_0_9, 'MarkerEdgeColor', marker_color_notch_0_9)
+title(['Filtragem notch com r=', num2str(r_0_9),' do número de novos casos diários de COVID-19 em ', city])
+legend(['notch r=', num2str(r_0_9)])
+xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
+
+subplot(223)
+stem(data_sao_paulo.data, new_cases_notch_0_99, 'filled', 'MarkerSize', 3,...
+    'LineWidth', 0.1, 'Color', bar_color_notch_0_99, 'MarkerFaceColor', marker_color_notch_0_99, 'MarkerEdgeColor', marker_color_notch_0_99)
+title(['Filtragem notch com r=', num2str(r_0_99),' do número de novos casos diários de COVID-19 em ', city])
+legend(['notch r=', num2str(r_0_99)])
+xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
+
+subplot(224)
+stem(data_sao_paulo.data, new_cases_notch_0_999, 'filled', 'MarkerSize', 3,...
+    'LineWidth', 0.1, 'Color', bar_color_notch_0_999, 'MarkerFaceColor', marker_color_notch_0_999, 'MarkerEdgeColor', marker_color_notch_0_999)
+title(['Filtragem notch com r=', num2str(r_0_999),' do número de novos casos diários de COVID-19 em ', city])
+legend(['notch r=', num2str(r_0_999)])
+xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
+
+if save
+    saveas(gcf, '../images/sao_paulo_novos_casos_notch.png')
+end
+
+
+%% Figure 3
+figure(3)
 subplot(421)
 stem(data_sao_paulo.data, data_sao_paulo.casos_novos, 'filled', 'MarkerSize', 3,...
     'LineWidth', 0.1, 'Color', bar_color_src, 'MarkerFaceColor', marker_color_src, 'MarkerEdgeColor', marker_color_src)
@@ -206,10 +271,10 @@ legend('média móvel 7')
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 
 subplot(422)
-stem(data_sao_paulo.data, new_cases_notch, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_notch, 'MarkerFaceColor', marker_color_notch, 'MarkerEdgeColor', marker_color_notch)
-title(['Filtragem notch com r=', num2str(r_c),' do número de novos casos diários de COVID-19 em ', city])
-legend(['notch r=', num2str(r_c)])
+stem(data_sao_paulo.data, new_cases_butterworth_notch, 'filled', 'MarkerSize', 3,...
+    'LineWidth', 0.1, 'Color', bar_color_butter, 'MarkerFaceColor', marker_color_butter, 'MarkerEdgeColor', marker_color_butter)
+title(['Filtragem butterworth com notch com r=', num2str(r_c),' do número de novos casos diários de COVID-19 em ', city])
+legend('butterworth de ordem 3 e wc=2\pi/7')
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 
 subplot(424)
@@ -237,132 +302,9 @@ if save
     saveas(gcf, '../images/sao_paulo_novos_casos_filtragem_notch.png')
 end
 
-%% Figure 3
-figure(3)
-subplot(421)
-stem(data_sao_paulo.data, per_pop * data_sao_paulo.casos_novos_por_pop, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_src, 'MarkerFaceColor', marker_color_src, 'MarkerEdgeColor', marker_color_src)
-title(['Número de novos casos diários de COVID-19 por ', num2str(per_pop), ' habitantes em ', city])
-legend('original')
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-subplot(422)
-stem(data_sao_paulo.data, per_pop * new_cases_per_pop_notch, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_notch, 'MarkerFaceColor', marker_color_notch, 'MarkerEdgeColor', marker_color_notch)
-title(['Filtragem notch com r=', num2str(r_c),' do número de novos casos diários de COVID-19 por ', num2str(per_pop), ' habitantes em ', city])
-legend(['notch r=', num2str(r_c)])
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-subplot(423)
-stem(data_sao_paulo.data, per_pop * new_cases_per_pop_moving_avg_3, 'filled', 'MarkerSize', 3, ...
-    'LineWidth', 0.1, 'Color', bar_color_3, 'MarkerFaceColor', marker_color_3, 'MarkerEdgeColor', marker_color_3)
-title(['Média móvel 3 do número de novos casos diários de COVID-19 por ', num2str(per_pop), ' habitantes em ', city])
-legend('média móvel 3')
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-subplot(425)
-stem(data_sao_paulo.data, per_pop * new_cases_per_pop_moving_avg_5, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_5, 'MarkerFaceColor', marker_color_5, 'MarkerEdgeColor', marker_color_5)
-title(['Média móvel 5 do número de novos casos diários de COVID-19 por ', num2str(per_pop), ' habitantes em ', city])
-legend('média móvel 5')
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-subplot(427)
-stem(data_sao_paulo.data, per_pop * new_cases_per_pop_moving_avg_7, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_7, 'MarkerFaceColor', marker_color_7, 'MarkerEdgeColor', marker_color_7)
-title(['Média móvel 7 do número de novos casos diários de COVID-19 por ', num2str(per_pop), ' habitantes em ', city])
-legend('média móvel 7')
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-subplot(424)
-stem(data_sao_paulo.data, per_pop * new_cases_per_pop_gaussian_3, 'filled', 'MarkerSize', 3, ...
-    'LineWidth', 0.1, 'Color', bar_color_3, 'MarkerFaceColor', marker_color_3, 'MarkerEdgeColor', marker_color_3)
-title(['Filtragem gaussiana 3 do número de novos casos diários de COVID-19 por ', num2str(per_pop), ' habitantes em ', city])
-legend('gaussian 3')
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-subplot(426)
-stem(data_sao_paulo.data, per_pop * new_cases_per_pop_gaussian_5, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_5, 'MarkerFaceColor', marker_color_5, 'MarkerEdgeColor', marker_color_5)
-title(['Filtragem gaussiana 5 do número de novos casos diários de COVID-19 por ', num2str(per_pop), ' habitantes em ', city])
-legend('gaussian 5')
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-subplot(428)
-stem(data_sao_paulo.data, per_pop * new_cases_per_pop_gaussian_7, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_7, 'MarkerFaceColor', marker_color_7, 'MarkerEdgeColor', marker_color_7)
-title(['Filtragem gaussiana 7 do número de novos casos diários de COVID-19 por ', num2str(per_pop), ' habitantes em ', city])
-legend('gaussian 7')
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-if save
-    saveas(gcf, '../images/sao_paulo_novos_casos_por_pop_filtragem.png')
-end
 
 %% Figure 4
 figure(4)
-subplot(421)
-stem(data_sao_paulo.data, per_pop * data_sao_paulo.casos_novos_por_pop, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_src, 'MarkerFaceColor', marker_color_src, 'MarkerEdgeColor', marker_color_src)
-title(['Número de novos casos diários de COVID-19 por ', num2str(per_pop), ' habitantes em ', city])
-legend('original')
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-subplot(422)
-stem(data_sao_paulo.data, per_pop * new_cases_per_pop_notch, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_notch, 'MarkerFaceColor', marker_color_notch, 'MarkerEdgeColor', marker_color_notch)
-title(['Filtragem notch com r=', num2str(r_c),' do número de novos casos por ', num2str(per_pop), ' habitantes em ', city])
-legend(['notch r=', num2str(r_c)])
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-subplot(423)
-stem(data_sao_paulo.data, per_pop * new_cases_per_pop_moving_avg_3_notch, 'filled', 'MarkerSize', 3, ...
-    'LineWidth', 0.1, 'Color', bar_color_3, 'MarkerFaceColor', marker_color_3, 'MarkerEdgeColor', marker_color_3)
-title(['Média móvel 3 e notch com r=', num2str(r_c), ' do número de novos casos por ', num2str(per_pop), ' habitantes em ', city])
-legend('média móvel 3')
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-subplot(425)
-stem(data_sao_paulo.data, per_pop * new_cases_per_pop_moving_avg_5_notch, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_5, 'MarkerFaceColor', marker_color_5, 'MarkerEdgeColor', marker_color_5)
-title(['Média móvel 5 e notch com r=', num2str(r_c), ' do número de novos casos por ', num2str(per_pop), ' habitantes em ', city])
-legend('média móvel 5')
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-subplot(427)
-stem(data_sao_paulo.data, per_pop * new_cases_per_pop_moving_avg_7_notch, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_7, 'MarkerFaceColor', marker_color_7, 'MarkerEdgeColor', marker_color_7)
-title(['Média móvel 7 e notch com r=', num2str(r_c), ' do número de novos casos por ', num2str(per_pop), ' habitantes em ', city])
-legend('média móvel 7')
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-subplot(424)
-stem(data_sao_paulo.data, per_pop * new_cases_per_pop_gaussian_3_notch, 'filled', 'MarkerSize', 3, ...
-    'LineWidth', 0.1, 'Color', bar_color_3, 'MarkerFaceColor', marker_color_3, 'MarkerEdgeColor', marker_color_3)
-title(['Gaussiana 3 e notch com r=', num2str(r_c), ' do número de novos casos por ', num2str(per_pop), ' habitantes em ', city])
-legend('gaussian 3')
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-subplot(426)
-stem(data_sao_paulo.data, per_pop * new_cases_per_pop_gaussian_5_notch, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_5, 'MarkerFaceColor', marker_color_5, 'MarkerEdgeColor', marker_color_5)
-title(['Gaussiana 5 e notch com r=', num2str(r_c), ' do número de novos casos por ', num2str(per_pop), ' habitantes em ', city])
-legend('gaussian 5')
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-subplot(428)
-stem(data_sao_paulo.data, per_pop * new_cases_per_pop_gaussian_7_notch, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_7, 'MarkerFaceColor', marker_color_7, 'MarkerEdgeColor', marker_color_7)
-title(['Gaussiana 7 e notch com r=', num2str(r_c), ' do número de novos casos por ', num2str(per_pop), ' habitantes em ', city])
-legend('gaussian 7')
-xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
-
-if save
-    saveas(gcf, '../images/sao_paulo_novos_casos_por_pop_filtragem_notch.png')
-end
-
-%% Figure 5
-figure(5)
 subplot(421)
 stem(data_sao_paulo.data, data_sao_paulo.indice_isolamento, 'filled', 'MarkerSize', 3,...
     'LineWidth', 0.1, 'Color', bar_color_src, 'MarkerFaceColor', marker_color_src, 'MarkerEdgeColor', marker_color_src)
@@ -372,10 +314,10 @@ xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 ylim([0, 1])
 
 subplot(422)
-stem(data_sao_paulo.data, isolation_notch, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_notch, 'MarkerFaceColor', marker_color_notch, 'MarkerEdgeColor', marker_color_notch)
-title(['Filtragem notch com r=', num2str(r_i),' do índice de isolamento social médio diário em ', city])
-legend(['notch r=', num2str(r_i)])
+stem(data_sao_paulo.data, isolation_butterworth, 'filled', 'MarkerSize', 3,...
+    'LineWidth', 0.1, 'Color', bar_color_butter, 'MarkerFaceColor', marker_color_butter, 'MarkerEdgeColor', marker_color_butter)
+title(['Filtragem butterworth do índice de isolamento social médio diário em ', city])
+legend('butterworth de ordem 3 e wc=2\pi/7')
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 ylim([0, 1])
 
@@ -432,6 +374,45 @@ if save
 end
 
 
+%% Figure 5
+figure(5)
+subplot(221)
+stem(data_sao_paulo.data, data_sao_paulo.indice_isolamento, 'filled', 'MarkerSize', 3,...
+    'LineWidth', 0.1, 'Color', bar_color_src, 'MarkerFaceColor', marker_color_src, 'MarkerEdgeColor', marker_color_src)
+title(['Índice de isolamento social médio diário em ', city])
+legend('original')
+xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
+ylim([0, 1])
+
+subplot(222)
+stem(data_sao_paulo.data, isolation_notch_0_9, 'filled', 'MarkerSize', 3,...
+    'LineWidth', 0.1, 'Color', bar_color_notch_0_9, 'MarkerFaceColor', marker_color_notch_0_9, 'MarkerEdgeColor', marker_color_notch_0_9)
+title(['Filtragem notch com r=', num2str(r_0_9),' do índice de isolamento social médio diário em ', city])
+legend(['notch r=', num2str(r_0_9)])
+xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
+ylim([0, 1])
+
+subplot(223)
+stem(data_sao_paulo.data, isolation_notch_0_99, 'filled', 'MarkerSize', 3,...
+    'LineWidth', 0.1, 'Color', bar_color_notch_0_99, 'MarkerFaceColor', marker_color_notch_0_99, 'MarkerEdgeColor', marker_color_notch_0_99)
+title(['Filtragem notch com r=', num2str(r_0_99),' do índice de isolamento social médio diário em ', city])
+legend(['notch r=', num2str(r_0_99)])
+xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
+ylim([0, 1])
+
+subplot(224)
+stem(data_sao_paulo.data, isolation_notch_0_999, 'filled', 'MarkerSize', 3,...
+    'LineWidth', 0.1, 'Color', bar_color_notch_0_999, 'MarkerFaceColor', marker_color_notch_0_999, 'MarkerEdgeColor', marker_color_notch_0_999)
+title(['Filtragem notch com r=', num2str(r_0_999),' do índice de isolamento social médio diário em ', city])
+legend(['notch r=', num2str(r_0_999)])
+xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
+ylim([0, 1])
+
+if save
+    saveas(gcf, '../images/sao_paulo_isolamento_notch.png')
+end
+
+
 %% Figure 6
 figure(6)
 subplot(421)
@@ -443,10 +424,10 @@ xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 ylim([0, 1])
 
 subplot(422)
-stem(data_sao_paulo.data, isolation_notch, 'filled', 'MarkerSize', 3,...
-    'LineWidth', 0.1, 'Color', bar_color_notch, 'MarkerFaceColor', marker_color_notch, 'MarkerEdgeColor', marker_color_notch)
-title(['Filtragem notch com r=', num2str(r_i),' do índice de isolamento social médio diário em ', city])
-legend(['notch r=', num2str(r_i)])
+stem(data_sao_paulo.data, isolation_butterworth_notch, 'filled', 'MarkerSize', 3,...
+    'LineWidth', 0.1, 'Color', bar_color_butter, 'MarkerFaceColor', marker_color_butter, 'MarkerEdgeColor', marker_color_butter)
+title(['Filtragem butterworth com notch com r=', num2str(r_i),' do índice de isolamento social médio diário em ', city])
+legend('butterworth de ordem 3 e wc=2\pi/7')
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 ylim([0, 1])
 
@@ -553,7 +534,7 @@ stem(data_sao_paulo.data, new_cases_gaussian_7_notch, 'filled', 'MarkerSize', 3,
     'LineWidth', 0.1, 'Color', bar_color_src, 'MarkerFaceColor', marker_color_src, 'MarkerEdgeColor', marker_color_src)
 hold off
 title(['Número de novos casos diários de COVID-19 em ', city])
-legend('quarentena', ['gaussian 7 notch r=', num2str(r_c)])
+legend('quarentena', ['gaussian 7 notch r=', num2str(r_0_999)])
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 
 subplot(312)
@@ -563,8 +544,8 @@ hold on
 stem(data_sao_paulo.data, per_pop * new_cases_per_pop_gaussian_7_notch, 'filled', 'MarkerSize', 3,...
     'LineWidth', 0.1, 'Color', bar_color_src, 'MarkerFaceColor', marker_color_src, 'MarkerEdgeColor', marker_color_src)
 hold off
-title(['Gaussiana 7 e notch com r=', num2str(r_c), ' do número de novos casos por ', num2str(per_pop), ' habitantes em ', city])
-legend('quarentena', ['gaussian 7 notch r=', num2str(r_c)])
+title(['Gaussiana 7 e notch com r=', num2str(r_0_999), ' do número de novos casos por ', num2str(per_pop), ' habitantes em ', city])
+legend('quarentena', ['gaussian 7 notch r=', num2str(r_0_999)])
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 
 subplot(313)
@@ -574,7 +555,7 @@ hold on
 stem(data_sao_paulo.data, isolation_gaussian_7_notch, 'filled', 'MarkerSize', 3,...
     'LineWidth', 0.1, 'Color', bar_color_src, 'MarkerFaceColor', marker_color_src, 'MarkerEdgeColor', marker_color_src)
 hold off
-title(['Gaussiana 7 e notch com r=', num2str(r_c), ' do índice de isolamento social médio diário em ', city])
+title(['Gaussiana 7 e notch com r=', num2str(r_i), ' do índice de isolamento social médio diário em ', city])
 legend('quarentena', ['gaussian 7 notch r=', num2str(r_i)])
 xlim([data_sao_paulo.data(1), data_sao_paulo.data(n_days)])
 ylim([0, 1])
@@ -768,7 +749,7 @@ else
     plot([correlation_init_delay, correlation_final_delay], [0, 0], 'k--');
     hold off
     title(['Correlograma por atraso entre o isolamento social e o número de casos diários em ', city])
-    xlabel('Diferença de dias entre o dia de coleta do isolamento social e o dia de coleta dos casos diários')
+    xlabel('Dia de coleta dos casos diários menos dia de coleta do isolamento social')
     ylabel('Correlação entre novos casos diários e índice de isolamento social')
     legend('intervalo com 95% confiança', 'correlação')
     ylim([-1, 1])
@@ -791,6 +772,7 @@ else
     hold off
     title(['Correlograma por atraso entre o isolamento social e a variação diária do número de casos diários em ', city])
     xlabel('Diferença de dias entre o dia de coleta do isolamento social e o dia de coleta da variação diária dos casos diários')
+    xlabel('Dia de coleta da variação diária dos casos diários menos dia de coleta do isolamento social')
     ylabel('Correlação entre a variação diária de novos casos diários e índice de isolamento social')
     legend('intervalo com 95% confiança', 'correlação')
     ylim([-1, 1])
@@ -812,7 +794,7 @@ else
     plot([correlation_init_delay, correlation_final_delay], [0, 0], 'k--');
     hold off
     title(['Correlograma por atraso entre o isolamento social e o número de casos acumulados em ', city])
-    xlabel('Diferença de dias entre o dia de coleta do isolamento social e o dia de coleta dos casos acumulados')
+    xlabel('Dia de coleta dos casos acumulados menos dia de coleta do isolamento social')
     ylabel('Correlação entre os casos acumulados e índice de isolamento social')
     legend('intervalo com 95% confiança', 'correlação')
     ylim([-1, 1])
