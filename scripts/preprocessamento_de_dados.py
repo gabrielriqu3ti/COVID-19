@@ -1,8 +1,5 @@
 """
  Arquivo   : preprocessamento_de_dados.py
- Autor     : Gabriel Henrique Riqueti
- E-mail    : gabrielhriqueti@gmail.com
- Data      : 17/05/2021
  Descrição : Realiza um pré-processamento dos dados de Covid-19 nos municípios do Estado de São Paulo.
 
  Pré-processamento do banco de dados gerais de Covid-19 por município:
