@@ -18,6 +18,8 @@ A partir do correlograma acima, nota-se que é não se pode afirmar que há uma 
 
 Segundo o artigo (FERREIRA et al., 2021), não há uma relação simples entre o índice de isolamento social e a incidência de novos casos diários, o que está de acordo com a correlação encontrada em São Paulo. Para (FERREIRA et al., 2021) a incidência é na verdade resultado de uma combinação de fatores, como isolamento social, hierarquia urbana, índice de desenvolvimento humano e mobilidade humana e do comércio.
 
+Para ler uma análise mais detalhada, acesse o [relatório](/PTC3456_P1.pdf) do projeto.
+
 ## Fontes
 
 ### Números de casos e óbitos
